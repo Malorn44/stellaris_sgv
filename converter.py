@@ -19,13 +19,14 @@ def unzip_save(f: BytesIO):
                 print("Parsing gamestate")
                 yield 'gamestate', gamestate
 
+def savToJson(filelocation):
+    with open(filelocation, "rb") as save:
+        f = BytesIO(save.read())
 
-with open("test_save.sav", "rb") as save:
-    f = BytesIO(save.read())
-
-    result = {
-        name: jsonify(unzipped)
-        for name, unzipped in unzip_save(f)
-    }
-    with open('data.json', 'w') as json_f:
-        json.dump(result, json_f)
+        result = {
+            name: jsonify(unzipped)
+            for name, unzipped in unzip_save(f)
+        }
+        with open('data.json', 'w') as json_f:
+            json.dump(result, json_f)
+        return result
