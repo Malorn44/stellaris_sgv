@@ -11,6 +11,9 @@ from tkinter import ttk
 # data = savToJson("test_save.sav")['gamestate']
 
 with open('data.json') as f:
+
+    systems = []
+
     data = json.load(f)['gamestate']
     locs = []
     minx, miny = sys.maxsize, sys.maxsize
@@ -25,6 +28,9 @@ with open('data.json') as f:
         maxy = max(maxy, y)
 
         locs.append((x,y))
+        systems.append(System(val))
+
+
 
 
     # x = System(1)
