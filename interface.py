@@ -60,8 +60,14 @@ class Zoom_Advanced(ttk.Frame):
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(minx-5,miny-5,maxx+5,maxy+5, width=1)
         
+        for loc1 in locs:
+            for loc2 in locs:
+                u = random.randint(0,10000)
+                if u < 1:
+                    self.canvas.create_line(loc1[0], loc1[1], loc2[0], loc2[1])
+
         for loc in locs:
-            self.canvas.create_circle(loc[0], loc[1], 5, fill='red', activefill='black')
+            self.canvas.create_circle(loc[0], loc[1], 5, fill='blue', activefill='black')
         
         
         self.show_image()
