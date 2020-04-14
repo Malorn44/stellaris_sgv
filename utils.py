@@ -26,14 +26,6 @@ class System:
     def addPlanet(self, planet):
         self.planets.append(planet)
 
-    def print(self):
-        print('SYSTEM [ ', self.name, ' ]')
-        
-        print('planets: { ', end='')
-        for planet in self.planets:
-            planet.print()
-        print("}")
-
     def toString(self):
         ret = ''
         
@@ -41,7 +33,7 @@ class System:
         ret += 'coords: (' + str(self.pos[0]) + ', ' + str(self.pos[1]) + ')\n'
         ret += 'planets: {\n'
         for planet in self.planets:
-            p_str = "\t" + planet.toString().replace("\n", "\n\t");
+            p_str = "\t" + planet.toString().replace("\n", "\n\t")
             ret += p_str + '\n'
         ret += '}'
         return ret
@@ -58,25 +50,37 @@ class Planet:
             for ID in planet['deposits']:
                 self.deposit_ids.append(ID)
 
-    def print(self):
-        print('PLANET [ ', self.name, ' ]')
-        print('type:', self.type)
-        print('deposits_ids: { ', end='')
-        for ID in self.deposit_ids:
-            print(ID, end = ' ')
-        print("}")
+        self.deposits = []
+
+    def addDeposit(self, deposit):
+        self.deposits.append(deposit)
 
     def toString(self):
         ret = ''
 
         ret += 'PLANET [ ' + self.name + ' ]\n'
         ret += 'type: ' + self.type + '\n'
-        ret += 'deposits_ids: { '
-        for ID in self.deposit_ids:
-            ret += str(ID) + ' ' 
+        ret += 'deposits: {\n'
+        for deposit in self.deposits:
+            d_str = "\t" + deposit.toString().replace("\n", "\n\t")
+            ret += d_str + '\n' 
         ret += '}'
         return ret
 
 
 # Stores information associated with a deposit
-# class Deposit:
+class Deposit:
+    def __init__(self, deposit):
+        self.type = deposit['type']
+        
+        self.swap_type = None
+        if 'swap_type' in deposit:
+            self.swap_type = deposit['swap_type']
+
+    def toString(self):
+        ret = ''
+
+        ret += self.type
+        if self.swap_type != None:
+            ret += "\n" + self.swap_type
+        return ret
