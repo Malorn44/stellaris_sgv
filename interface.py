@@ -25,7 +25,7 @@ class AutoScrollbar(ttk.Scrollbar):
 
 class Zoom_Advanced(ttk.Frame):
     ''' Advanced zoom of the image '''
-    def __init__(self, mainframe, locs, minx, miny, maxx, maxy):
+    def __init__(self, mainframe, systems, BBox):
         ''' Initialize the main Frame '''
         ttk.Frame.__init__(self, master=mainframe)
         self.master.title('Zoom with mouse wheel')
@@ -54,20 +54,27 @@ class Zoom_Advanced(ttk.Frame):
         self.canvas.bind('<Button-5>',   self.wheel)  # only with Linux, wheel scroll down
         self.canvas.bind('<Button-4>',   self.wheel)  # only with Linux, wheel scroll up
         
-        self.width, self.height = maxx, maxy
+        self.width, self.height = BBox[2], BBox[3]
         self.imscale = 1.0  # scale for the canvaas image
         self.delta = 1.3  # zoom magnitude
         # Put image into container rectangle and use it to set proper coordinates to the image
-        self.container = self.canvas.create_rectangle(minx-5,miny-5,maxx+5,maxy+5, width=1)
+        self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
         
-        for loc1 in locs:
-            for loc2 in locs:
-                u = random.randint(0,10000)
-                if u < 1:
-                    self.canvas.create_line(loc1[0], loc1[1], loc2[0], loc2[1])
+        # for loc1 in locs:
+        #     for loc2 in locs:
+        #         u = random.randint(0,10000)
+        #         if u < 1:
+        #             self.canvas.create_line(loc1[0], loc1[1], loc2[0], loc2[1])
 
-        for loc in locs:
-            self.canvas.create_circle(loc[0], loc[1], 5, fill='blue', activefill='black')
+        for s in systems:
+            for c in s.hyperlanes:
+                p1 = s.pos
+                p2 = systems[c].pos
+                self.canvas.create_line(p1[0], p1[1], p2[0], p2[1])
+                
+        for s in systems:
+            p = s.pos
+            self.canvas.create_circle(p[0], p[1], 5, fill='blue', activefill='black')
         
         
         self.show_image()
