@@ -12,6 +12,9 @@ import json
 import sys
 from converter import savToJson
 from utils import System, Planet, Deposit
+import matplotlib.pyplot as plt
+import matplotlib
+
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -61,6 +64,8 @@ class Zoom_Advanced(ttk.Frame):
         self.canvas.bind('<Button-5>',   self.wheel)  # only with Linux, wheel scroll down
         self.canvas.bind('<Button-4>',   self.wheel)  # only with Linux, wheel scroll up
         
+
+        self.minx, self.miny = BBox[0], BBox[1]
         self.width, self.height = BBox[2], BBox[3]
         self.imscale = 1.0  # scale for the canvaas image
         self.delta = 1.3  # zoom magnitude
@@ -68,13 +73,26 @@ class Zoom_Advanced(ttk.Frame):
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
         
-
         self.draw_universe(systems)
         ImportButton(mainframe, 1)
         self.show_image()
 
 
+
+
+
+    def convert_to_hex(self, rgba_color):
+        red = int(rgba_color[0]*255)
+        green = int(rgba_color[1]*255)
+        blue = int(rgba_color[2]*255)
+        hexcolor = '#{r:02x}{g:02x}{b:02x}'.format(r=red,g=green,b=blue)
+        return hexcolor
+
+
     def draw_universe(self, systems):
+        
+        self.cmap = plt.cm.get_cmap('Spectral')
+
         for s in systems:
             for c in s.hyperlanes:
                 p1 = s.pos
@@ -83,7 +101,10 @@ class Zoom_Advanced(ttk.Frame):
 
         for s in systems:
             p = s.pos
-            color = 'blue'
+            norm = matplotlib.colors.Normalize(vmin=self.minx, vmax=self.width)
+            normed = norm(p[0])
+            rgba = self.cmap(normed)
+            color = self.convert_to_hex(rgba)
             if "Faranis" in s.name:
                 print(p)
 
@@ -217,8 +238,6 @@ class ImportButton(object):
     def weight_update(self, new_weight, scale):
         new_weight = float(new_weight)
         print(scale + " is now " + str(new_weight))
-        self.energy.set(0.1)
-        print("energy is " + str(self.energy.get()))
 
 
     def import_json(self):
