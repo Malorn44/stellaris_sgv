@@ -51,11 +51,6 @@ with open('data.json') as f:
     ### Setting BBox corners
     bbox = (minx, miny, maxx, maxy)
 
-
-
-    for i in range(3):
-        print(systems[i].toString())
-
     root = tk.Tk()
     app = Zoom_Advanced(root, systems, bbox)
     root.mainloop()
