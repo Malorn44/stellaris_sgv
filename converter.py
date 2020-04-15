@@ -28,6 +28,6 @@ def savToJson(filelocation):
             for name, unzipped in unzip_save(f)
         }
         print("done")
-        with open('data.json', 'w') as json_f:
+        with open('data2.json', 'w') as json_f:
             json.dump(result, json_f)
         return result

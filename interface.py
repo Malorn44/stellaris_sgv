@@ -69,12 +69,12 @@ class Zoom_Advanced(ttk.Frame):
         self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
         
 
-        self.make_universe(systems)
+        self.draw_universe(systems)
         ImportButton(mainframe, 1)
         self.show_image()
 
 
-    def make_universe(self, systems):
+    def draw_universe(self, systems):
         for s in systems:
             for c in s.hyperlanes:
                 p1 = s.pos
@@ -83,7 +83,11 @@ class Zoom_Advanced(ttk.Frame):
 
         for s in systems:
             p = s.pos
-            self.canvas.create_circle(p[0], p[1], 5, fill='blue', activefill='black')
+            color = 'blue'
+            if "Faranis" in s.name:
+                print(p)
+
+            self.canvas.create_circle(p[0], p[1], 5, fill=color, activefill='black')
 
 
     def scroll_y(self, *args, **kwargs):
@@ -190,7 +194,7 @@ class ImportButton(object):
     def import_sav(self):
         file = easygui.fileopenbox()
 
-        data = savToJson("test_save.sav")['gamestate']
+        data = savToJson(file)['gamestate']
 
         self.convert_to_universe(data, self.parent)
 
@@ -221,7 +225,7 @@ class ImportButton(object):
 
             # updating max and min positions
             minx = min(minx, x)
-            miny = min(miny, x)
+            miny = min(miny, y)
             maxx = max(maxx, x)
             maxy = max(maxy, y)
 
