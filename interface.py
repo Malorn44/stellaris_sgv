@@ -8,6 +8,10 @@ from tkinter import ttk
 from tkinter import *
 from PIL import Image, ImageTk
 import easygui
+import json
+import sys
+from converter import savToJson
+from utils import System, Planet, Deposit
 
 
 class AutoScrollbar(ttk.Scrollbar):
@@ -64,6 +68,13 @@ class Zoom_Advanced(ttk.Frame):
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
         
+
+        self.make_universe(systems)
+        ImportButton(mainframe, 1)
+        self.show_image()
+
+
+    def make_universe(self, systems):
         for s in systems:
             for c in s.hyperlanes:
                 p1 = s.pos
@@ -73,9 +84,7 @@ class Zoom_Advanced(ttk.Frame):
         for s in systems:
             p = s.pos
             self.canvas.create_circle(p[0], p[1], 5, fill='blue', activefill='black')
-        
-        ImportButton(mainframe, BBox)
-        self.show_image()
+
 
     def scroll_y(self, *args, **kwargs):
         ''' Scroll canvas vertically and redraw the image '''
@@ -152,20 +161,80 @@ class Zoom_Advanced(ttk.Frame):
 
 
 class ImportButton(object):
-    def __init__(self, parent, bbox):
+    def __init__(self, parent, new):
         self.parent = parent
+        self.parent.title('Stellaris SGV')
+        
+        self.parent.geometry('900x800')
+
         self.right_frame = Frame(self.parent)
-        self.right_frame.grid(row=0, column=2, sticky='ns')
-        self.importt = Button(self.right_frame, text="Import", command=self.import_save)
-        self.importt.grid(row=0, column=0, sticky='nswe')
+        self.right_frame.grid(row=0, rowspan=4, column=2, sticky='ns')
+        self.jso = Button(self.right_frame, text="Import from .json", command=self.import_json)
+        self.sav = Button(self.right_frame, text="Import from .sav", command=self.import_sav)
+        if new:
+            self.jso.grid_configure(row=0, column=0, padx=0, pady=0)
+            self.sav.grid_configure(row=1, column=0, padx=0, pady=0)
+        else:
+            self.jso.grid(row=2, column=0)
+            self.sav.grid(row=2, column=1)
 
 
-    def import_save(self):
+    def import_json(self):
         file = easygui.fileopenbox()
 
-        print(file)
-        return
-        
+        with open(file) as f:
+            data = json.load(f)['gamestate']
+            self.convert_to_universe(data, self.parent)
+
+
+    def import_sav(self):
+        file = easygui.fileopenbox()
+
+        data = savToJson("test_save.sav")['gamestate']
+
+        self.convert_to_universe(data, self.parent)
+
+
+    def convert_to_universe(self, data, root):
+        systems = []
+        planets = []
+        deposits = []
+
+        minx, miny = sys.maxsize, sys.maxsize
+        maxx, maxy = -1*sys.maxsize, -1*sys.maxsize
+
+        ### Populating deposits list
+        for key,val in data['deposit'].items():
+            deposits.append(Deposit(val))
+
+        ### Populating planets list
+        for key,val in data['planets']['planet'].items():
+            planets.append(Planet(val))
+
+            for ID in planets[-1].deposit_ids:
+                planets[-1].addDeposit(deposits[ID])
+
+        ### Populating systems list
+        for key,val in data['galactic_object'].items():
+            x = val['coordinate']['x']
+            y = val['coordinate']['y']
+
+            # updating max and min positions
+            minx = min(minx, x)
+            miny = min(miny, x)
+            maxx = max(maxx, x)
+            maxy = max(maxy, y)
+
+            systems.append(System(val))
+            
+            for ID in systems[-1].planet_ids:
+                systems[-1].addPlanet(planets[ID])
+
+        ### Setting BBox corners
+        bbox = (minx, miny, maxx, maxy)
+        self.sav.grid_forget()
+        self.jso.grid_forget()
+        Zoom_Advanced(root, systems, bbox)
 
 
 # path = '../../him.png'  # place path to your image here
