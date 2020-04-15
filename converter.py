@@ -2,7 +2,6 @@ import json
 from io import BytesIO
 from tokenize import tokenize
 from zipfile import ZipFile
-
 from clausewitz.parse import parse
 from clausewitz.util.tokenize import prepare
 

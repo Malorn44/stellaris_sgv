@@ -165,18 +165,56 @@ class ImportButton(object):
         self.parent = parent
         self.parent.title('Stellaris SGV')
         
-        self.parent.geometry('900x800')
+        self.parent.geometry('450x400')
 
-        self.right_frame = Frame(self.parent)
+        self.right_frame = Frame(self.parent, bd=3, relief="solid")
         self.right_frame.grid(row=0, rowspan=4, column=2, sticky='ns')
         self.jso = Button(self.right_frame, text="Import from .json", command=self.import_json)
         self.sav = Button(self.right_frame, text="Import from .sav", command=self.import_sav)
         if new:
             self.jso.grid_configure(row=0, column=0, padx=0, pady=0)
             self.sav.grid_configure(row=1, column=0, padx=0, pady=0)
+            
+            self.energy = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="yellow", resolution=0.01, label='Energy', command=self.energy_updates)
+            self.energy.grid(row=2,column=0)
+            self.minerals = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="red", resolution=0.01, label='Minerals', command=self.minerals_updates)
+            self.minerals.grid(row=3,column=0)
+            self.physics = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="blue", resolution=0.01, label='Physics', command=self.physics_updates)
+            self.physics.grid(row=4,column=0)
+            self.biology = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="green", resolution=0.01, label='Biology', command=self.biology_updates)
+            self.biology.grid(row=5,column=0)
+            self.engineering = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="orange", resolution=0.01, label='Engineering', command=self.engineering_updates)
+            self.engineering.grid(row=6,column=0)
+            
+
+
         else:
             self.jso.grid(row=2, column=0)
             self.sav.grid(row=2, column=1)
+
+
+
+    def engineering_updates(self, changed_weight):
+        self.weight_update(changed_weight, "engineering")
+
+    def biology_updates(self, changed_weight):
+        self.weight_update(changed_weight, "biology")
+
+    def physics_updates(self, changed_weight):
+        self.weight_update(changed_weight, "physics")
+
+    def minerals_updates(self, changed_weight):
+        self.weight_update(changed_weight, "minerals")
+    
+    def energy_updates(self, changed_weight):
+        self.weight_update(changed_weight, "energy")
+
+
+    def weight_update(self, new_weight, scale):
+        new_weight = float(new_weight)
+        print(scale + " is now " + str(new_weight))
+        self.energy.set(0.1)
+        print("energy is " + str(self.energy.get()))
 
 
     def import_json(self):
@@ -234,6 +272,7 @@ class ImportButton(object):
         bbox = (minx, miny, maxx, maxy)
         self.sav.grid_forget()
         self.jso.grid_forget()
+        self.right_frame.grid_forget()
         Zoom_Advanced(root, systems, bbox)
 
 
