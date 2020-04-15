@@ -5,7 +5,10 @@
 import random
 import tkinter as tk
 from tkinter import ttk
+from tkinter import *
 from PIL import Image, ImageTk
+import easygui
+
 
 class AutoScrollbar(ttk.Scrollbar):
     ''' A scrollbar that hides itself if it's not needed.
@@ -71,6 +74,7 @@ class Zoom_Advanced(ttk.Frame):
             p = s.pos
             self.canvas.create_circle(p[0], p[1], 5, fill='blue', activefill='black')
         
+        ImportButton(mainframe, BBox)
         self.show_image()
 
     def scroll_y(self, *args, **kwargs):
@@ -145,6 +149,24 @@ class Zoom_Advanced(ttk.Frame):
     def _create_circle(self, x, y, r, **kwargs):
         return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
     tk.Canvas.create_circle = _create_circle
+
+
+class ImportButton(object):
+    def __init__(self, parent, bbox):
+        self.parent = parent
+        self.right_frame = Frame(self.parent)
+        self.right_frame.grid(row=0, column=2, sticky='ns')
+        self.importt = Button(self.right_frame, text="Import", command=self.import_save)
+        self.importt.grid(row=0, column=0, sticky='nswe')
+
+
+    def import_save(self):
+        file = easygui.fileopenbox()
+
+        print(file)
+        return
+        
+
 
 # path = '../../him.png'  # place path to your image here
 # root = tk.Tk()
