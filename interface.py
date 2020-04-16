@@ -11,9 +11,10 @@ import easygui
 import json
 import sys
 from converter import savToJson
-from utils import System, Planet, Deposit
+from utils import Galaxy, System, Planet, Deposit
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.colors import Normalize
 
 
 
@@ -35,7 +36,7 @@ class AutoScrollbar(ttk.Scrollbar):
 
 class Zoom_Advanced(ttk.Frame):
     ''' Advanced zoom of the image '''
-    def __init__(self, mainframe, systems, BBox):
+    def __init__(self, mainframe, galaxy, BBox):
         ''' Initialize the main Frame '''
         ttk.Frame.__init__(self, master=mainframe)
         self.master.title('Stellaris SGV')
@@ -73,7 +74,7 @@ class Zoom_Advanced(ttk.Frame):
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
         
-        self.draw_universe(systems)
+        self.draw_universe(galaxy)
         ImportButton(mainframe, 1)
         self.show_image()
 
@@ -89,8 +90,8 @@ class Zoom_Advanced(ttk.Frame):
         return hexcolor
 
 
-    def draw_universe(self, systems):
-        
+    def draw_universe(self, galaxy):
+        systems = galaxy.systems
         self.cmap = plt.cm.get_cmap('Spectral')
 
         for s in systems:
@@ -101,6 +102,7 @@ class Zoom_Advanced(ttk.Frame):
 
         for s in systems:
             p = s.pos
+
             norm = matplotlib.colors.Normalize(vmin=self.minx, vmax=self.width)
             normed = norm(p[0])
             rgba = self.cmap(normed)
@@ -291,12 +293,17 @@ class ImportButton(object):
             for ID in systems[-1].planet_ids:
                 systems[-1].addPlanet(planets[ID])
 
+        ### Creating galaxy container
+        galaxy = Galaxy(systems)
+        galaxy.print_stats()
+
+
         ### Setting BBox corners
         bbox = (minx, miny, maxx, maxy)
         self.sav.grid_forget()
         self.jso.grid_forget()
         self.right_frame.grid_forget()
-        Zoom_Advanced(root, systems, bbox)
+        Zoom_Advanced(root, galaxy, bbox)
 
 
 # path = '../../him.png'  # place path to your image here
