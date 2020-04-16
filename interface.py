@@ -92,7 +92,7 @@ class Zoom_Advanced(ttk.Frame):
 
     def draw_universe(self, galaxy):
         systems = galaxy.systems
-        self.cmap = plt.cm.get_cmap('Spectral')
+        self.cmap = plt.cm.get_cmap('coolwarm')
 
         for s in systems:
             for c in s.hyperlanes:
@@ -103,12 +103,20 @@ class Zoom_Advanced(ttk.Frame):
         for s in systems:
             p = s.pos
 
-            norm = matplotlib.colors.Normalize(vmin=self.minx, vmax=self.width)
-            normed = norm(p[0])
-            rgba = self.cmap(normed)
+            score = 0
+            weights = [.3,.3,.4/3,.4/3,.4/3]
+            for i in range(len(galaxy.resources)):
+                norm = Normalize(vmin=galaxy.min_resources[i], vmax=galaxy.max_resources[i])
+                normed = norm(s.resources[i])
+                weighted = normed * weights[i]
+                score += weighted
+
+            print(score)
+
+            # norm = matplotlib.colors.Normalize(vmin=self.minx, vmax=self.width)
+            # normed = norm(p[0])
+            rgba = self.cmap(score)
             color = self.convert_to_hex(rgba)
-            if "Faranis" in s.name:
-                print(p)
 
             self.canvas.create_circle(p[0], p[1], 5, fill=color, activefill='black')
 
