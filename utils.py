@@ -1,4 +1,5 @@
 import sys
+from matplotlib.colors import Normalize
 
 # File for storing custom classes
 
@@ -10,13 +11,19 @@ class Galaxy:
     def __init__(self, systems, resources=resources):
         self.systems = systems
 
+        self.max_score = -1*sys.maxsize
+        self.min_score = sys.maxsize
+        self.avg_score = 0
+
         self.resources = resources
 
         # max amounts per system
         self.max_resources = [0] * len(self.resources)
+        self.max_divergence = [-1*sys.maxsize] * len(self.resources)
 
         # min amounts per system
         self.min_resources = [sys.maxsize] * len(self.resources)
+        self.min_divergence = [sys.maxsize] * len(self.resources)
 
         # average amounts per system
         self.avg_resources = [0] * len(self.resources)
@@ -29,6 +36,19 @@ class Galaxy:
         
         for i in range(len(self.resources)):
             self.avg_resources[i] /= len(self.systems)
+
+    def calcDivergenceRange(self):
+        for s in self.systems:
+            for i in range(len(self.resources)):
+                self.max_divergence[i] = max(self.max_divergence[i], s.divergence[i])
+                self.min_divergence[i] = min(self.min_divergence[i], s.divergence[i])
+
+    def calcScoreRange(self):
+        for s in self.systems:
+            self.max_score = max(self.max_score, s.score)
+            self.min_score = min(self.min_score, s.score)
+            self.avg_score += s.score
+        self.avg_score /= len(self.systems)
 
     def print_stats(self):
         print('There are', len(self.systems), 'in the galaxy')
@@ -63,11 +83,29 @@ class System:
 
         self.resources = [0] * len(resources)
 
+        self.divergence = [0] * len(resources)
+
+        self.score = 0
+
     def addPlanet(self, planet):
         self.planets.append(planet)
 
         for i in range(len(resources)):
             self.resources[i] += planet.resources[i]
+
+    def calcDivergence(self, averages):
+        for i in range(len(resources)):
+            self.divergence[i] = self.resources[i] - averages[i]
+
+    def updateScore(self, weights, min_resources, max_resources):
+        self.score = 0
+        for i in range(len(resources)): 
+            norm = Normalize(vmin=min_resources[i], vmax=max_resources[i])
+            normed = norm(self.resources[i])
+            weighted = normed * weights[i]
+            self.score += weighted
+            # print(weighted)
+        # print('\t', self.score)
 
     def toString(self):
         ret = ''

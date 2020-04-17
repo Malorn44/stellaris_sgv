@@ -74,8 +74,8 @@ class Zoom_Advanced(ttk.Frame):
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
         
+        self.buttons = ImportButton(mainframe, 1)
         self.draw_universe(galaxy)
-        ImportButton(mainframe, 1)
         self.show_image()
 
 
@@ -100,22 +100,26 @@ class Zoom_Advanced(ttk.Frame):
                 p2 = systems[c].pos
                 self.canvas.create_line(p1[0], p1[1], p2[0], p2[1])
 
+        print(galaxy.min_score, galaxy.max_score, galaxy.avg_score)
         for s in systems:
             p = s.pos
 
             score = 0
-            weights = [.3,.3,.4/3,.4/3,.4/3]
-            for i in range(len(galaxy.resources)):
-                norm = Normalize(vmin=galaxy.min_resources[i], vmax=galaxy.max_resources[i])
-                normed = norm(s.resources[i])
-                weighted = normed * weights[i]
-                score += weighted
+            weights = [self.buttons.energy.get(), self.buttons.minerals.get(),
+                        self.buttons.physics.get(), self.buttons.society.get(),
+                        self.buttons.engineering.get()]
+            # for i in range(len(galaxy.resources)):
+                # norm = Normalize(vmin=galaxy.min_divergence[i], vmax=galaxy.max_divergence[i])
+                # normed = norm(s.divergence[i])
+                # weighted = normed * weights[i]
+                # score += weighted
+            #     print(galaxy.min_divergence[i], galaxy.max_divergence[i], s.divergence[i], weighted)
+            # print('\t',score)
 
-            print(score)
 
-            # norm = matplotlib.colors.Normalize(vmin=self.minx, vmax=self.width)
-            # normed = norm(p[0])
-            rgba = self.cmap(score)
+            norm = matplotlib.colors.Normalize(vmin=galaxy.min_score, vmax=galaxy.max_score)
+            normed = norm(s.score)
+            rgba = self.cmap(normed)
             color = self.convert_to_hex(rgba)
 
             self.canvas.create_circle(p[0], p[1], 5, fill=color, activefill='black')
@@ -196,10 +200,12 @@ class Zoom_Advanced(ttk.Frame):
 
 
 class ImportButton(object):
-    def __init__(self, parent, new):
+    def __init__(self, parent, new, galaxy=None):
         self.parent = parent
         self.parent.title('Stellaris SGV')
-        
+
+        self.galaxy = galaxy
+
         self.parent.geometry('450x400')
 
         self.right_frame = Frame(self.parent, bd=3, relief="solid")
@@ -216,12 +222,16 @@ class ImportButton(object):
             self.minerals.grid(row=3,column=0)
             self.physics = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="blue", resolution=0.01, label='Physics', command=self.physics_updates)
             self.physics.grid(row=4,column=0)
-            self.biology = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="green", resolution=0.01, label='Biology', command=self.biology_updates)
-            self.biology.grid(row=5,column=0)
+            self.society = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="green", resolution=0.01, label='Society', command=self.society_updates)
+            self.society.grid(row=5,column=0)
             self.engineering = Scale(self.right_frame,from_=0, to=1, orient='horizontal', troughcolor="orange", resolution=0.01, label='Engineering', command=self.engineering_updates)
             self.engineering.grid(row=6,column=0)
-            
 
+            self.minerals.set(1)
+            self.energy.set(1)
+            self.physics.set(1)
+            self.society.set(1)
+            self.engineering.set(1)
 
         else:
             self.jso.grid(row=2, column=0)
@@ -232,22 +242,39 @@ class ImportButton(object):
     def engineering_updates(self, changed_weight):
         self.weight_update(changed_weight, "engineering")
 
-    def biology_updates(self, changed_weight):
-        self.weight_update(changed_weight, "biology")
+    def society_updates(self, changed_weight):
+        print('blocked')
+        # self.weight_update(changed_weight, "society")
 
     def physics_updates(self, changed_weight):
-        self.weight_update(changed_weight, "physics")
+        print('blocked')
+        # self.weight_update(changed_weight, "physics")
 
     def minerals_updates(self, changed_weight):
-        self.weight_update(changed_weight, "minerals")
+        print('blocked')
+        # self.weight_update(changed_weight, "minerals")
     
     def energy_updates(self, changed_weight):
-        self.weight_update(changed_weight, "energy")
+        print('blocked')
+    #     self.weight_update(changed_weight, "energy")
 
 
     def weight_update(self, new_weight, scale):
         new_weight = float(new_weight)
+
+        # self.minerals.set((1-new_weight)/4)
+        # print(self.minerals.get())
+        # self.society.set((1-new_weight)/4)
+        # print(self.society.get())
+        # self.physics.set((1-new_weight)/4)
+        # print(self.physics.get())
+        # self.energy.set((1-new_weight)/4)
+        # print(self.energy.get())
         print(scale + " is now " + str(new_weight))
+
+        if (self.galaxy != None):
+            self.parent.draw_universe(galaxy)
+            self.parent.show_image()
 
 
     def import_json(self):
@@ -305,6 +332,15 @@ class ImportButton(object):
         galaxy = Galaxy(systems)
         galaxy.print_stats()
 
+        ### Calculate system resource divergences
+        for s in galaxy.systems:
+            s.calcDivergence(galaxy.avg_resources)
+        galaxy.calcDivergenceRange()
+
+        ### Calculate system scores
+        for s in galaxy.systems:
+            s.updateScore([.3,.3,.4/3,.4/3,.4/3], galaxy.min_resources, galaxy.max_resources)
+        galaxy.calcScoreRange()
 
         ### Setting BBox corners
         bbox = (minx, miny, maxx, maxy)
@@ -313,6 +349,9 @@ class ImportButton(object):
         self.right_frame.grid_forget()
         Zoom_Advanced(root, galaxy, bbox)
 
+    def _create_circle(self, x, y, r, **kwargs):
+        return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+    tk.Canvas.create_circle = _create_circle
 
 # path = '../../him.png'  # place path to your image here
 # root = tk.Tk()
