@@ -100,7 +100,7 @@ class Zoom_Advanced(ttk.Frame):
                 p2 = systems[c].pos
                 self.canvas.create_line(p1[0], p1[1], p2[0], p2[1])
 
-        print(galaxy.min_score, galaxy.max_score, galaxy.avg_score)
+        print(galaxy.min_score, galaxy.max_score, galaxy.avg_score, galaxy.median_score)
         for s in systems:
             p = s.pos
 
@@ -117,7 +117,7 @@ class Zoom_Advanced(ttk.Frame):
             # print('\t',score)
 
 
-            norm = matplotlib.colors.TwoSlopeNorm(vmin=galaxy.min_score, vcenter=galaxy.avg_score, vmax=galaxy.max_score)
+            norm = matplotlib.colors.TwoSlopeNorm(vmin=galaxy.min_score, vcenter=galaxy.median_score, vmax=galaxy.max_score)
             normed = norm(s.score)
             rgba = self.cmap(normed)
             color = self.convert_to_hex(rgba)
@@ -341,6 +341,7 @@ class ImportButton(object):
         for s in galaxy.systems:
             s.updateScore([.2,.2,.2,.2,.2], galaxy.min_resources, galaxy.max_resources)
         galaxy.calcScoreRange()
+        galaxy.calcMedian()
 
         ### Setting BBox corners
         bbox = (minx, miny, maxx, maxy)

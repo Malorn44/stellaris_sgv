@@ -1,4 +1,5 @@
 import sys
+import statistics
 from matplotlib.colors import Normalize
 
 # File for storing custom classes
@@ -14,6 +15,7 @@ class Galaxy:
         self.max_score = -1*sys.maxsize
         self.min_score = sys.maxsize
         self.avg_score = 0
+        self.median_score = 0
 
         self.resources = resources
 
@@ -49,6 +51,9 @@ class Galaxy:
             self.min_score = min(self.min_score, s.score)
             self.avg_score += s.score
         self.avg_score /= len(self.systems)
+
+    def calcMedian(self):
+        self.median_score = statistics.median([s.score for s in self.systems])
 
     def print_stats(self):
         print('There are', len(self.systems), 'in the galaxy')
@@ -113,7 +118,7 @@ class System:
         ret += 'SYSTEM [ ' + self.name + ' ]\n'
         ret += 'coords: (' + str(self.pos[0]) + ', ' + str(self.pos[1]) + ')\n'
         for i in range(len(resources)):
-            ret += resources[i] + ':', self.resources[i] + '\n'
+            ret += resources[i] + ': ' + str(self.resources[i]) + '\n'
         ret += 'hyperlanes: { '
         for lane in self.hyperlanes:
             ret += str(lane) + ' '
@@ -156,7 +161,7 @@ class Planet:
         ret += 'PLANET [ ' + self.name + ' ]\n'
         ret += 'type: ' + self.type + '\n'
         for i in range(len(resources)):
-            ret += resources[i] + ':', self.resources[i] + '\n'
+            ret += resources[i] + ': ' + str(self.resources[i]) + '\n'
         ret += 'deposits: {\n'
         for deposit in self.deposits:
             d_str = "\t" + deposit.toString().replace("\n", "\n\t")
