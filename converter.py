@@ -4,6 +4,7 @@ from tokenize import tokenize
 from zipfile import ZipFile
 from clausewitz.parse import parse
 from clausewitz.util.tokenize import prepare
+from pathlib import Path
 
 
 def jsonify(f):
@@ -27,6 +28,6 @@ def savToJson(filelocation):
             for name, unzipped in unzip_save(f)
         }
         print("done")
-        with open('data2.json', 'w') as json_f:
+        with open(Path(filelocation).stem + ".json", 'w') as json_f:
             json.dump(result, json_f)
         return result
