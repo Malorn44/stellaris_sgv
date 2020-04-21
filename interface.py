@@ -40,6 +40,7 @@ class Zoom_Advanced(ttk.Frame):
         ''' Initialize the main Frame '''
         ttk.Frame.__init__(self, master=mainframe)
         self.master.title('Stellaris SGV')
+        self.galaxy = galaxy
         # Vertical and horizontal scrollbars for canvas
         vbar = AutoScrollbar(self.master, orient='vertical')
         hbar = AutoScrollbar(self.master, orient='horizontal')
@@ -70,6 +71,8 @@ class Zoom_Advanced(ttk.Frame):
         self.width, self.height = BBox[2], BBox[3]
         self.imscale = 1.0  # scale for the canvaas image
         self.delta = 1.3  # zoom magnitude
+        self.tooltip = False
+        self.tipwindow= None
         
         # Put image into container rectangle and use it to set proper coordinates to the image
         self.container = self.canvas.create_rectangle(BBox[0]-5,BBox[1]-5,BBox[2]+5,BBox[3]+5, width=1)   
@@ -90,6 +93,36 @@ class Zoom_Advanced(ttk.Frame):
         return hexcolor
 
 
+
+    def system_enter(self, event, i):
+        #print(self.galaxy.systems[i].toString())
+        print(str(event.x) + " " + str(event.y))
+        self.text = self.galaxy.systems[i].name
+        if self.tooltip:
+            return
+        #x, y, cx, cy = self.widget.bbox("insert")
+        x = self.master.winfo_pointerx()
+        y = self.master.winfo_pointery()
+        abs_coord_x = event.x + self.master.winfo_rootx() + 10
+        abs_coord_y = event.y + self.master.winfo_rooty() + 10
+        tw = Toplevel()
+        self.tipwindow = tw
+        tw.wm_overrideredirect(1)
+        tw.wm_geometry("+%d+%d" % (abs_coord_x, abs_coord_y))
+        label = Label(tw, text=self.text, justify=LEFT,
+                      background="#ffffe0", relief=SOLID, borderwidth=1,
+                      font=("questrial", "24", "normal"))
+        label.pack(ipadx=1)
+        self.tooltip = True
+
+    def system_exit(self, event, i):
+        tw = self.tipwindow
+        self.tipwindow = None
+        if self.tooltip:
+            tw.destroy()
+            self.tooltip = False
+
+
     def draw_universe(self, galaxy):
         systems = galaxy.systems
         self.cmap = plt.cm.get_cmap('coolwarm')
@@ -100,10 +133,11 @@ class Zoom_Advanced(ttk.Frame):
                 p2 = systems[c].pos
                 self.canvas.create_line(p1[0], p1[1], p2[0], p2[1])
 
-        print(galaxy.min_score, galaxy.max_score, galaxy.avg_score, galaxy.median_score)
-        for s in systems:
-            p = s.pos
+        #print(galaxy.min_score, galaxy.max_score, galaxy.avg_score, galaxy.median_score)
 
+        for i in range(len(systems)):
+            s=systems[i]
+            p = s.pos
             score = 0
             weights = [self.buttons.energy.get(), self.buttons.minerals.get(),
                         self.buttons.physics.get(), self.buttons.society.get(),
@@ -122,7 +156,12 @@ class Zoom_Advanced(ttk.Frame):
             rgba = self.cmap(normed)
             color = self.convert_to_hex(rgba)
 
-            self.canvas.create_circle(p[0], p[1], 5, fill=color, activefill='black')
+            circ_id = self.canvas.create_circle(p[0], p[1], 5, fill=color, activefill='black', tags=i)
+            #print(circ_id)
+            enter_callback = lambda event, tag=i: self.system_enter(event, tag)
+            leave_callback = lambda event, tag=i: self.system_exit(event, tag)
+            self.canvas.tag_bind(circ_id, "<Enter>", enter_callback)
+            self.canvas.tag_bind(circ_id, "<Leave>", leave_callback)
 
 
     def scroll_y(self, *args, **kwargs):
