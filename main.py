@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, Button, Frame, Toplevel, Label, Scale, LEFT, SOLID, SUNKEN, DoubleVar, PhotoImage
+from tkinterhtml import HtmlFrame
 import easygui
 from converter import savToJson
 from utils import Galaxy, System, Planet, Deposit
@@ -9,6 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.colors import Normalize, TwoSlopeNorm
 import math
+import urllib.request
 
 # TODO: Neaten code by adding and removing global variables, comment
 
@@ -308,7 +310,7 @@ class StellarisSGV:
             return
         system=self.galaxy.systems[i]
         #mins = PhotoImage(file='Minerals.gif')
-        self.text = 'Name:{n}\nMinerals:{m}\nEnergy:{e}\nPhysics:{p}\nSociety:{s}\nEngineering:{en}'.format(n=system.name,m=system.resources[0],e=system.resources[1],p=system.resources[2],s=system.resources[3],en=system.resources[4])
+        self.text = '{n:^18s}\nMinerals:{m}\nEnergy:{e}\nPhysics:{p}\nSociety:{s}\nEngineering:{en}'.format(n=system.name,m=system.resources[0],e=system.resources[1],p=system.resources[2],s=system.resources[3],en=system.resources[4])
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
         abs_coord_x = event.x + self.master.winfo_rootx() + 10
@@ -318,10 +320,8 @@ class StellarisSGV:
         tw.wm_overrideredirect(1)
         tw.wm_geometry("+%d+%d" % (abs_coord_x, abs_coord_y))
         label = Label(tw, text=self.text, justify=LEFT,
-                    background="#ffffe0", relief=SOLID, borderwidth=1,
+                    background="#ffffff", relief=SOLID, borderwidth=1,
                     font=("questrial", "18", "normal"))
-        #label = Label(tw, relief=SOLID, borderwidth=1, image=mins)
-        #label.image = mins
         label.pack(ipadx=1)
         self.tooltip = True
 
@@ -337,11 +337,11 @@ class StellarisSGV:
         systems = galaxy.systems
 
         #make key for colors
-        self.key = tk.Canvas(self.view, height=10, width=385)
+        self.key = tk.Canvas(self.view, height=15, width=385)
         self.key.grid(row=0, column=0, sticky='ne')
 
         self.key.create_text(0,0, anchor='nw', text="Worst")
-        self.key.create_text(360,0, anchor='nw', text="Best")
+        self.key.create_text(355,0, anchor='nw', text="Best")
         
         for s in systems:
             for c in s.hyperlanes:
@@ -372,11 +372,11 @@ class StellarisSGV:
         self.color_key(False)
 
 
-    def color_key(self, scale_change, norm = Normalize(vmin=40, vmax=350)):
+    def color_key(self, scale_change, norm = Normalize(vmin=40, vmax=345)):
 
         self.line_to_id = {}
         i = 40
-        while i < 350:
+        while i < 345:
             spot = norm(i)
             rgbb = self.cmap(spot)
             color = self.convert_to_hex(rgbb)

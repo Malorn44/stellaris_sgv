@@ -67,8 +67,9 @@ class Galaxy:
 # Stores information associated with a solar system
 class System:
     def __init__(self, system):
-        self.name = system['name'][1:-1] # remove surrounding " "
-        self.type = system['type'] # probably only 'star' type
+        name_split = system['name'][1:-1].split("_") # remove surrounding " "
+        self.name = " ".join(name_split[1:]) if len(name_split) > 1 else name_split[0] # remove '_' and rejoin
+        self.type = system['type'] # probably only 'star' typein(" ")
         self.pos = (-1*system['coordinate']['x'], system['coordinate']['y'])
 
         self.hyperlanes = []
