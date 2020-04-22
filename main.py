@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, Button, Frame, Toplevel, Label, Scale, LEFT, SOLID, SUNKEN, DoubleVar
+from tkinter import ttk, Button, Frame, Toplevel, Label, Scale, LEFT, SOLID, SUNKEN, DoubleVar, PhotoImage
 import easygui
 from converter import savToJson
 from utils import Galaxy, System, Planet, Deposit
@@ -33,7 +33,7 @@ class StellarisSGV:
         self.master = master
         master.title("Stellaris SGV")
 
-        self.view = Frame(self.master, bg='grey', width=450, height=450)
+        self.view = Frame(self.master, width=450, height=450)
         self.sidebar = Frame(self.master, relief=SUNKEN, bd=2, width=100, height=450)
 
 
@@ -43,6 +43,7 @@ class StellarisSGV:
         
         # self.sidebar.grid(row=0, column=1, sticky="nsew")
         self.sidebar.grid(row=0, column=0, sticky="nsew")
+        self.cmap = plt.cm.get_cmap('coolwarm')
         self.create_buttons(self.sidebar, 0)
 
     def create_view(self):
@@ -53,15 +54,15 @@ class StellarisSGV:
 
         vbar = AutoScrollbar(self.view, orient='vertical')
         hbar = AutoScrollbar(self.view, orient='horizontal')
-        vbar.grid(row=0, column=1, sticky='ns')
-        hbar.grid(row=1, column=0, sticky='we')
+        vbar.grid(row=1, column=1, sticky='ns')
+        hbar.grid(row=2, column=0, sticky='we')
         self.canvas = tk.Canvas(self.view, highlightthickness=0,
                                 xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        self.canvas.grid(row=0, column=0, sticky='nswe')
+        self.canvas.grid(row=1, column=0, sticky='nswe')
         vbar.configure(command=self.scroll_y)  # bind scrollbars to the canvas
         hbar.configure(command=self.scroll_x)
 
-        self.view.rowconfigure(0, weight=1) # make canvas expandable
+        self.view.rowconfigure(1, weight=1) # make canvas expandable
         self.view.columnconfigure(0, weight=1)
 
         self.tooltip = False
@@ -82,6 +83,7 @@ class StellarisSGV:
         self.canvas.bind('<MouseWheel>', self.wheel)  # with Windows and MacOS, but not Linux
         self.canvas.bind('<Button-5>',   self.wheel)  # only with Linux, wheel scroll down
         self.canvas.bind('<Button-4>',   self.wheel)  # only with Linux, wheel scroll up
+
 
     def create_buttons(self, parent, create_sliders):
         
@@ -114,6 +116,8 @@ class StellarisSGV:
         galaxy = self.galaxy
         systems = galaxy.systems
 
+        
+
         total = sum([scale.get() for scale in self.scales])
         weights = [scale.get()/total for scale in self.scales]
 
@@ -121,13 +125,14 @@ class StellarisSGV:
             s.updateScore(weights, galaxy.min_resources, galaxy.max_resources)
         galaxy.calcScoreRange()
         galaxy.calcMedian()
+        try:
+            norm = TwoSlopeNorm(vmin=galaxy.min_score, vcenter=galaxy.median_score, vmax=galaxy.max_score)
+        except: # Use regular Normalize in the case TwoSlopeNorm fails
+            norm = Normalize(vmin=galaxy.min_score, vmax=galaxy.max_score)
         
         for i in range(len(systems)):
             s = systems[i]
-            try:
-                norm = TwoSlopeNorm(vmin=galaxy.min_score, vcenter=galaxy.median_score, vmax=galaxy.max_score)
-            except: # Use regular Normalize in the case TwoSlopeNorm fails
-                norm = Normalize(vmin=galaxy.min_score, vmax=galaxy.max_score)
+
 
             normed = norm(s.score)
             rgba = self.cmap(normed)
@@ -299,10 +304,11 @@ class StellarisSGV:
         return hexcolor
             
     def system_enter(self, event, i):
-        self.text = self.galaxy.systems[i].name
         if self.tooltip:
             return
-        #x, y, cx, cy = self.widget.bbox("insert")
+        system=self.galaxy.systems[i]
+        #mins = PhotoImage(file='Minerals.gif')
+        self.text = 'Name:{n}\nMinerals:{m}\nEnergy:{e}\nPhysics:{p}\nSociety:{s}\nEngineering:{en}'.format(n=system.name,m=system.resources[0],e=system.resources[1],p=system.resources[2],s=system.resources[3],en=system.resources[4])
         x = self.master.winfo_pointerx()
         y = self.master.winfo_pointery()
         abs_coord_x = event.x + self.master.winfo_rootx() + 10
@@ -313,7 +319,9 @@ class StellarisSGV:
         tw.wm_geometry("+%d+%d" % (abs_coord_x, abs_coord_y))
         label = Label(tw, text=self.text, justify=LEFT,
                     background="#ffffe0", relief=SOLID, borderwidth=1,
-                    font=("questrial", "24", "normal"))
+                    font=("questrial", "18", "normal"))
+        #label = Label(tw, relief=SOLID, borderwidth=1, image=mins)
+        #label.image = mins
         label.pack(ipadx=1)
         self.tooltip = True
 
@@ -327,8 +335,14 @@ class StellarisSGV:
     def draw_universe(self, galaxy):
         self.galaxy = galaxy
         systems = galaxy.systems
-        self.cmap = plt.cm.get_cmap('coolwarm')
 
+        #make key for colors
+        self.key = tk.Canvas(self.view, height=10, width=385)
+        self.key.grid(row=0, column=0, sticky='ne')
+
+        self.key.create_text(0,0, anchor='nw', text="Worst")
+        self.key.create_text(360,0, anchor='nw', text="Best")
+        
         for s in systems:
             for c in s.hyperlanes:
                 p1 = s.pos
@@ -338,11 +352,13 @@ class StellarisSGV:
         self.system_to_circ = {}
 
         print(galaxy.min_score, galaxy.max_score, galaxy.avg_score, galaxy.median_score)
+        try:
+            norm = TwoSlopeNorm(vmin=galaxy.min_score, vcenter=galaxy.median_score, vmax=galaxy.max_score)
+        except: # Use regular Normalize in the case TwoSlopeNorm fails
+            norm = Normalize(vmin=galaxy.min_score, vmax=galaxy.max_score)
         for i in range(len(systems)):
             s = systems[i]
             p = s.pos
-
-            norm = TwoSlopeNorm(vmin=galaxy.min_score, vcenter=galaxy.median_score, vmax=galaxy.max_score)
             normed = norm(s.score)
             rgba = self.cmap(normed)
             color = self.convert_to_hex(rgba)
@@ -352,7 +368,24 @@ class StellarisSGV:
             enter_callback = lambda event, tag=i: self.system_enter(event, tag)
             leave_callback = lambda event, tag=i: self.system_exit(event, tag)
             self.canvas.tag_bind(circ_id, "<Enter>", enter_callback)
-            self.canvas.tag_bind(circ_id, "<Leave>", leave_callback)      
+            self.canvas.tag_bind(circ_id, "<Leave>", leave_callback)
+        self.color_key(False)
+
+
+    def color_key(self, scale_change, norm = Normalize(vmin=40, vmax=350)):
+
+        self.line_to_id = {}
+        i = 40
+        while i < 350:
+            spot = norm(i)
+            rgbb = self.cmap(spot)
+            color = self.convert_to_hex(rgbb)
+            #print("Color is " + color)
+            line_id = self.key.create_line(i,0,i,10, fill=color)
+            self.line_to_id[i] = line_id
+            i += 1
+
+
 
 root = tk.Tk()
 root.minsize(450, 200)
