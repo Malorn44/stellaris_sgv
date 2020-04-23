@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import ttk, Button, Frame, Toplevel, Label, Scale, LEFT, SOLID, SUNKEN, DoubleVar, PhotoImage
-from tkinterhtml import HtmlFrame
 import easygui
 from converter import savToJson
 from utils import Galaxy, System, Planet, Deposit
