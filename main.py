@@ -44,7 +44,7 @@ class StellarisSGV:
         
         # self.sidebar.grid(row=0, column=1, sticky="nsew")
         self.sidebar.grid(row=0, column=0, sticky="nsew")
-        self.cmap = plt.cm.get_cmap('coolwarm')
+        self.cmap = plt.cm.get_cmap('RdYlBu_r')
         self.create_buttons(self.sidebar, 0)
 
     def create_view(self):
